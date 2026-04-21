@@ -164,16 +164,37 @@ export default function App() {
         }
 
         if (options.mode === 'neon') {
+          // Apply aggressive multi-layer glow effect to match UI preview
+          const glowStrength = options.glowIntensity || 1;
+          
+          // Layer 1: Inner glow (5px base)
           ctx.shadowColor = color;
-          ctx.shadowBlur = 4 * (options.glowIntensity || 1);
+          ctx.shadowBlur = 5 * glowStrength;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 0;
+          ctx.fillStyle = color;
+          ctx.fillText(char, x * charWidth, y * charHeight);
+          
+          // Layer 2: Mid glow (15px base)
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 15 * glowStrength;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.fillStyle = color;
+          ctx.fillText(char, x * charWidth, y * charHeight);
+          
+          // Layer 3: Outer glow (30px base)
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 30 * glowStrength;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.fillStyle = color;
+          ctx.fillText(char, x * charWidth, y * charHeight);
         } else {
           ctx.shadowBlur = 0;
+          ctx.fillStyle = color;
+          ctx.fillText(char, x * charWidth, y * charHeight);
         }
-
-        ctx.fillStyle = color;
-        ctx.fillText(char, x * charWidth, y * charHeight);
       });
     });
 
