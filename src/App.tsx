@@ -41,11 +41,11 @@ export default function App() {
         contrast: 1.2, // Punchy contrast by default
         gamma: 1.0,
         ramp: DEFAULT_RAMP,
-        invert: false,
+        invert: true,
         colorMode: 'grayscale',
         aspectRatio: 2.0,
         dithering: false, // Dithering disabled by default for "Real ASCII" look
-        sharpen: 0.5,
+        sharpen: 0,
         mode: 'classic',
         singleChar: '@',
         neonPalette: 'matrix',
@@ -204,11 +204,11 @@ export default function App() {
             contrast: 1.2,
             gamma: 1.0,
             ramp: STRONG_RAMP,
-            invert: false,
+            invert: true,
             colorMode: 'grayscale',
             aspectRatio: 2.0,
             dithering: false,
-            sharpen: 0.5,
+            sharpen: 0,
             mode: 'classic',
             singleChar: '@',
             neonPalette: 'matrix',
@@ -236,7 +236,7 @@ export default function App() {
                                 <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
                                     <Zap className="w-5 h-5 text-white" />
                                 </div>
-                                <h1 className="font-display font-bold text-xl text-white tracking-tight">AsciiVision Pro</h1>
+                                <h1 className="font-display font-bold text-xl text-white tracking-tight">AsciiVision</h1>
                             </div>
                             <button
                                 onClick={() => setShowControls(false)}
@@ -403,7 +403,7 @@ export default function App() {
                                         <div className="space-y-2">
                                             <label className="text-xs font-medium text-zinc-400">Rendering Mode</label>
                                             <div className="grid grid-cols-1 gap-2">
-                                                {(['classic', 'high-detail', 'single-char', 'scanline', 'neon'] as const).map((m) => (
+                                                {(['classic', 'single-char', 'scanline', 'neon'] as const).map((m) => (
                                                     <button
                                                         key={m}
                                                         onClick={() => setOptions({ ...options, mode: m })}

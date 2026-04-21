@@ -1,6 +1,6 @@
 {
-  "name": "AsciiVision Pro",
-  "description": "A high-performance, edge-aware ASCII art rendering system with perceptual corrections and creative controls.",
-  "requestFramePermissions": [],
-  "majorCapabilities": []
+    "name": "AsciiVision",
+    "description": "A high-performance, edge-aware ASCII art rendering system with perceptual corrections and creative controls.",
+    "requestFramePermissions": [],
+    "majorCapabilities": []
 }
