@@ -30,7 +30,7 @@ These settings provide the best balance for most images:
 | Colored Output | ✗ OFF | Grayscale for contrast |
 
 <p align="center">
-  <img src="images/test-3.png" alt="Test Banner" width="100%" />
+  <img src="images/test-9.png" alt="Test Banner" width="100%" />
 </p>
 
 ## Control Breakdown
@@ -106,6 +106,10 @@ These settings provide the best balance for most images:
 - 1.0 = subtle glow
 - 1.8-2.5 = heavy glow (PNG export recommended)
 
+<p align="center">
+  <img src="images/test-3.png" alt="Test Banner" width="100%" />
+</p>
+
 ## Export Options
 
 **Copy** — Clipboard text (plain ASCII)
@@ -122,6 +126,11 @@ These settings provide the best balance for most images:
 6. **Character Mapping** — Brightness mapped to ASCII characters
 7. **Color Mapping** — RGB values assigned to each character (if enabled)
 8. **Glow Rendering** — Multi-layer shadow effects (PNG export)
+
+<p align="center">
+  <img src="images/test-3.png" alt="Test Banner" width="100%" />
+</p>
+
 
 ## Tips & Tricks
 
