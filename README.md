@@ -107,7 +107,7 @@ These settings provide the best balance for most images:
 - 1.8-2.5 = heavy glow (PNG export recommended)
 
 <p align="center">
-  <img src="images/test-10.png" alt="Test Banner" width="100%" />
+  <img src="images/test-14.png" alt="Test Banner" width="100%" />
 </p>
 
 ## Export Options
