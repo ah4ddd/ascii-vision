@@ -156,7 +156,7 @@ Found an issue? Have an idea? Submit a PR to [github.com/ah4ddd/ascii-vision](ht
 ---
 
 <p align="center">
-  <img src="images/test.png" alt="Test Banner" width="100%" />
+  <img src="images/test-12.png" alt="Test Banner" width="100%" />
 </p>
 
 **Made with ❤️ for ASCII enthusiasts**
