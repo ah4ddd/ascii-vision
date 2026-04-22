@@ -147,7 +147,7 @@ Found an issue? Have an idea? Submit a PR to [github.com/ah4ddd/ascii-vision](ht
 ---
 
 <p align="center">
-  <img src="test.png" alt="AsciiVision Demo" width="500"/>
+  <img src="test.png" alt="AsciiVision Dem" width="500"/>
 </p
 
 **Made with ❤️ for ASCII enthusiasts**
