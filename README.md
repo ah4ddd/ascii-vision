@@ -1,9 +1,10 @@
 <p align="center">
-  <img src="images/test.png" alt="AsciiVision Banner" width="100%" />
+  <img src="images/test-2.png" alt="Test Banner" width="100%" />
 </p>
 
+---
 
-ASCII art converter with neon effects, creative controls, and real-time rendering.
+**ASCII art converter with neon effects, creative controls, and real-time rendering.**
 
 ## What It Does
 
