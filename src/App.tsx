@@ -5,17 +5,13 @@ import {
     Image as ImageIcon,
     Copy,
     Download,
-    Settings2,
     Monitor,
     Sun,
     Contrast,
     Layers,
     Maximize,
-    Clipboard,
-    ExternalLink,
     ChevronRight,
     ChevronLeft,
-    X,
     Palette,
     Check,
     Zap
@@ -70,6 +66,14 @@ function AppLogo() {
     );
 }
 
+function GitHubIcon({ className = "h-4 w-4" }: { className?: string }) {
+    return (
+        <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+        </svg>
+    );
+}
+
 export default function App() {
     const [image, setImage] = useState<HTMLImageElement | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -81,7 +85,7 @@ export default function App() {
     const [options, setOptions] = useState<AsciiOptions>(DEFAULT_OPTIONS);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const outputRef = useRef<HTMLElement>(null);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -229,9 +233,13 @@ export default function App() {
         setOptions(DEFAULT_OPTIONS);
     };
 
+    const scrollToOutput = () => {
+        outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
     return (
         <div
-            className="flex flex-col md:flex-row h-screen bg-[#0a0a0a] text-zinc-300 font-sans overflow-hidden"
+            className="flex min-h-screen flex-col overflow-y-auto bg-[#0a0a0a] text-zinc-300 font-sans md:h-screen md:flex-row md:overflow-hidden"
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
         >
@@ -242,9 +250,9 @@ export default function App() {
                         initial={{ x: -320 }}
                         animate={{ x: 0 }}
                         exit={{ x: -320 }}
-                        className="w-full md:w-80 h-full border-r border-white/5 bg-zinc-950/50 backdrop-blur-xl z-20 flex flex-col"
+                        className="z-20 flex w-full flex-none flex-col border-b border-white/5 bg-zinc-950/50 backdrop-blur-xl md:h-full md:w-80 md:border-b-0 md:border-r"
                     >
-                        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                        <div className="flex items-center justify-between border-b border-white/5 p-4 sm:p-6">
                             <div className="flex items-center gap-2">
                                 <div className="relative w-8 h-8 overflow-hidden rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-[0_0_18px_rgba(37,99,235,0.28)]">
                                     <div className="absolute -inset-2 flex items-center justify-center text-[5px] leading-[4px] font-mono font-black text-white/18 tracking-[0.6px] rotate-[-12deg] select-none">
@@ -270,15 +278,30 @@ export default function App() {
                                 </div>
                                 <h1 className="font-display font-bold text-xl text-white tracking-tight">AsciiVision</h1>
                             </div>
-                            <button
-                                onClick={() => setShowControls(false)}
-                                className="p-2 hover:bg-white/5 rounded-full md:hidden"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center gap-2 md:hidden">
+                                <a
+                                    href="https://github.com/ah4ddd/ascii-vision"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+                                    aria-label="View AsciiVision on GitHub"
+                                    title="View on GitHub"
+                                >
+                                    <GitHubIcon />
+                                </a>
+                                <button
+                                    onClick={scrollToOutput}
+                                    disabled={!asciiResult}
+                                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold uppercase tracking-wider text-zinc-300 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                                    aria-label="View generated output"
+                                >
+                                    <Monitor className="h-4 w-4" />
+                                    <span>Output</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth ascii-scroll">
+                        <div className="ascii-scroll space-y-6 scroll-smooth p-4 sm:p-6 md:flex-1 md:space-y-8 md:overflow-y-auto">
                             {/* Input Section */}
                             <section>
                                 <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
@@ -286,7 +309,7 @@ export default function App() {
                                 </h2>
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="group relative cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-zinc-800 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all duration-300 p-4"
+                                    className="group relative cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-zinc-800 p-4 transition-all duration-300 hover:border-indigo-500/50 hover:bg-indigo-500/5"
                                 >
                                     <label className="flex flex-col items-center justify-center gap-2 text-sm text-zinc-400 group-hover:text-zinc-200">
                                         <Upload className="w-6 h-6 mb-1" />
@@ -300,8 +323,8 @@ export default function App() {
                                         accept="image/*"
                                     />
                                     {previewUrl && (
-                                        <div className="mt-3 relative rounded-lg overflow-hidden border border-white/5 aspect-video bg-black">
-                                            <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
+                                        <div className="relative mt-3 max-h-[42vh] overflow-hidden rounded-lg border border-white/5 bg-black md:aspect-video md:max-h-none">
+                                            <img src={previewUrl} alt="Preview" className="max-h-[42vh] w-full object-contain md:h-full md:max-h-none" />
                                         </div>
                                     )}
                                 </div>
@@ -490,7 +513,7 @@ export default function App() {
                             </div>
                         </div>
 
-                        <div className="p-6 border-t border-white/5 bg-zinc-900/50">
+                        <div className="border-t border-white/5 bg-zinc-900/50 p-4 sm:p-6">
                             <button
                                 onClick={handleReset}
                                 className="w-full py-2.5 text-xs font-bold text-zinc-500 hover:text-zinc-300 transition-colors uppercase tracking-wider"
@@ -511,8 +534,8 @@ export default function App() {
             </button>
 
             {/* Main Preview Area */}
-            <main className="flex-1 relative flex flex-col bg-black min-w-0">
-                <header className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-zinc-950/50 backdrop-blur-sm z-10">
+            <main ref={outputRef} className="relative flex min-h-[75vh] w-full flex-none scroll-mt-0 flex-col bg-black md:min-h-0 md:flex-1 md:min-w-0">
+                <header className="z-10 flex min-h-16 flex-col gap-3 border-b border-white/5 bg-zinc-950/50 px-4 py-3 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between md:h-16 md:px-6 md:py-0">
                     <div className="flex items-center gap-4">
                         {!showControls && (
                             <button
@@ -527,25 +550,25 @@ export default function App() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
                         <button
                             onClick={copyToClipboard}
                             disabled={!asciiResult}
-                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-all border border-white/5"
+                            className="flex items-center justify-center gap-2 rounded-md border border-white/5 bg-zinc-800 px-3 py-2 text-xs font-medium transition-all hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 sm:py-1.5"
                         >
                             <Copy className="w-3.5 h-3.5" /> <span>Copy</span>
                         </button>
                         <button
                             onClick={downloadTxt}
                             disabled={!asciiResult}
-                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-all border border-white/5"
+                            className="flex items-center justify-center gap-2 rounded-md border border-white/5 bg-zinc-800 px-3 py-2 text-xs font-medium transition-all hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 sm:py-1.5"
                         >
                             <Download className="w-3.5 h-3.5" /> <span>TXT</span>
                         </button>
                         <button
                             onClick={downloadPng}
                             disabled={!asciiResult}
-                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md transition-all shadow-lg shadow-indigo-500/10"
+                            className="flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-xs font-medium text-white shadow-lg shadow-indigo-500/10 transition-all hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 sm:py-1.5"
                         >
                             <ImageIcon className="w-3.5 h-3.5" /> <span>PNG</span>
                         </button>
@@ -553,12 +576,10 @@ export default function App() {
                             href="https://github.com/ah4ddd/ascii-vision"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-all border border-white/5 hover:border-white/10"
+                            className="hidden rounded-md border border-white/5 p-1.5 text-zinc-400 transition-all hover:border-white/10 hover:bg-zinc-800 hover:text-white sm:block"
                             title="View on GitHub"
                         >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                            </svg>
+                            <GitHubIcon />
                         </a>
                     </div>
                 </header>
