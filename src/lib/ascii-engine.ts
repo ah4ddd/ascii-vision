@@ -10,7 +10,7 @@
  */
 
 export type RenderingMode = 'classic' | 'single-char' | 'scanline' | 'neon';
-export type NeonPalette = 'matrix' | 'cyan' | 'purple' | 'pink' | 'blue' | 'red' | 'custom';
+export type NeonPalette = 'matrix' | 'cyan' | 'purple' | 'pink' | 'blue' | 'red' | 'ember' | 'custom';
 
 export interface AsciiOptions {
     width: number;
@@ -199,6 +199,25 @@ function getNeonColor(r: number, g: number, b: number, palette: NeonPalette): st
         case 'pink': return `rgba(255, 0, 255, ${alpha})`;
         case 'blue': return `rgba(0, 102, 255, ${alpha})`;
         case 'red': return `rgba(255, 0, 64, ${alpha})`;
+        case 'ember': return getEmberColor(luma, alpha);
         default: return `rgb(${r},${g},${b})`;
     }
+}
+
+function getEmberColor(luma: number, alpha: number): string {
+    const low = { r: 26, g: 10, b: 0 };
+    const mid = { r: 255, g: 106, b: 0 };
+    const high = { r: 255, g: 210, b: 122 };
+
+    const from = luma < 0.65 ? low : mid;
+    const to = luma < 0.65 ? mid : high;
+    const rangeStart = luma < 0.65 ? 0 : 0.65;
+    const rangeSize = luma < 0.65 ? 0.65 : 0.35;
+    const t = Math.max(0, Math.min(1, (luma - rangeStart) / rangeSize));
+
+    const r = Math.round(from.r + (to.r - from.r) * t);
+    const g = Math.round(from.g + (to.g - from.g) * t);
+    const b = Math.round(from.b + (to.b - from.b) * t);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
