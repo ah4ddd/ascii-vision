@@ -27,6 +27,7 @@ export interface AsciiOptions {
     singleChar?: string;
     neonPalette?: NeonPalette;
     glowIntensity?: number;
+    bloomIntensity?: number;
 }
 
 export interface AsciiResult {
@@ -172,7 +173,7 @@ export async function convertToAscii(
 
             let colorStr = `rgb(${r},${g},${b})`;
             if (options.mode === 'neon' && options.neonPalette) {
-                colorStr = getNeonColor(r, g, b, options.neonPalette);
+                colorStr = getNeonColor(r, g, b, options.neonPalette, options.bloomIntensity ?? 0);
             }
             rowColors.push(colorStr);
         }
@@ -188,18 +189,19 @@ export async function convertToAscii(
     };
 }
 
-function getNeonColor(r: number, g: number, b: number, palette: NeonPalette): string {
+function getNeonColor(r: number, g: number, b: number, palette: NeonPalette, bloomIntensity = 0): string {
     const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
     const alpha = 0.5 + luma * 0.5;
+    const bloom = Math.max(0, Math.min(2, bloomIntensity));
 
     switch (palette) {
-        case 'matrix': return `rgba(0, 255, 65, ${alpha})`;
-        case 'cyan': return `rgba(0, 255, 255, ${alpha})`;
-        case 'purple': return `rgba(189, 0, 255, ${alpha})`;
-        case 'pink': return `rgba(255, 0, 255, ${alpha})`;
-        case 'blue': return `rgba(0, 102, 255, ${alpha})`;
-        case 'red': return getRedNeonColor(luma, alpha);
-        case 'ember': return getEmberColor(luma, alpha);
+        case 'matrix': return applyBloomWash(getRgbString(0, 255, 65, alpha), luma, alpha, palette, bloom);
+        case 'cyan': return applyBloomWash(getRgbString(0, 255, 255, alpha), luma, alpha, palette, bloom);
+        case 'purple': return applyBloomWash(getRgbString(189, 0, 255, alpha), luma, alpha, palette, bloom);
+        case 'pink': return applyBloomWash(getRgbString(255, 0, 255, alpha), luma, alpha, palette, bloom);
+        case 'blue': return applyBloomWash(getRgbString(0, 102, 255, alpha), luma, alpha, palette, bloom);
+        case 'red': return applyBloomWash(getRedNeonColor(luma, alpha), luma, alpha, palette, bloom);
+        case 'ember': return applyBloomWash(getEmberColor(luma, alpha), luma, alpha, palette, bloom);
         default: return `rgb(${r},${g},${b})`;
     }
 }
@@ -225,17 +227,82 @@ function getGradientColor(
     alpha: number,
     low: { r: number; g: number; b: number },
     mid: { r: number; g: number; b: number },
-    high: { r: number; g: number; b: number }
+    high: { r: number; g: number; b: number },
+    midpoint = 0.65
 ): string {
-    const from = luma < 0.65 ? low : mid;
-    const to = luma < 0.65 ? mid : high;
-    const rangeStart = luma < 0.65 ? 0 : 0.65;
-    const rangeSize = luma < 0.65 ? 0.65 : 0.35;
+    const from = luma < midpoint ? low : mid;
+    const to = luma < midpoint ? mid : high;
+    const rangeStart = luma < midpoint ? 0 : midpoint;
+    const rangeSize = luma < midpoint ? midpoint : 1 - midpoint;
     const t = Math.max(0, Math.min(1, (luma - rangeStart) / rangeSize));
 
     const r = Math.round(from.r + (to.r - from.r) * t);
     const g = Math.round(from.g + (to.g - from.g) * t);
     const b = Math.round(from.b + (to.b - from.b) * t);
 
+    return getRgbString(r, g, b, alpha);
+}
+
+function getRgbString(r: number, g: number, b: number, alpha: number): string {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function applyBloomWash(baseColor: string, luma: number, alpha: number, palette: NeonPalette, bloom: number): string {
+    if (bloom <= 0) return baseColor;
+
+    const flash = getBloomFlashColor(luma, alpha, palette);
+    const washAmount = Math.min(1, bloom * 0.55 + Math.max(0, luma - 0.2) * bloom * 0.35);
+
+    return mixRgbStrings(baseColor, flash, washAmount);
+}
+
+function getBloomFlashColor(luma: number, alpha: number, palette: NeonPalette): string {
+    switch (palette) {
+        case 'matrix':
+            return getGradientColor(
+                luma,
+                alpha,
+                { r: 2, g: 16, b: 12 },
+                { r: 126, g: 221, b: 148 },
+                { r: 236, g: 255, b: 228 },
+                0.38
+            );
+        case 'cyan':
+            return getGradientColor(luma, alpha, { r: 0, g: 17, b: 22 }, { r: 121, g: 226, b: 232 }, { r: 228, g: 255, b: 255 }, 0.38);
+        case 'purple':
+            return getGradientColor(luma, alpha, { r: 18, g: 0, b: 24 }, { r: 186, g: 126, b: 226 }, { r: 249, g: 231, b: 255 }, 0.38);
+        case 'pink':
+            return getGradientColor(luma, alpha, { r: 24, g: 0, b: 15 }, { r: 229, g: 119, b: 174 }, { r: 255, g: 231, b: 244 }, 0.38);
+        case 'blue':
+            return getGradientColor(luma, alpha, { r: 0, g: 7, b: 28 }, { r: 105, g: 164, b: 235 }, { r: 226, g: 240, b: 255 }, 0.38);
+        case 'red':
+            return getGradientColor(luma, alpha, { r: 28, g: 0, b: 0 }, { r: 225, g: 111, b: 124 }, { r: 255, g: 232, b: 236 }, 0.38);
+        case 'ember':
+            return getGradientColor(luma, alpha, { r: 28, g: 10, b: 0 }, { r: 225, g: 154, b: 84 }, { r: 255, g: 239, b: 205 }, 0.38);
+        default:
+            return getRgbString(255, 255, 255, alpha);
+    }
+}
+
+function mixRgbStrings(from: string, to: string, amount: number): string {
+    const fromRgb = parseRgbString(from);
+    const toRgb = parseRgbString(to);
+    const t = Math.max(0, Math.min(1, amount));
+
+    const r = Math.round(fromRgb.r + (toRgb.r - fromRgb.r) * t);
+    const g = Math.round(fromRgb.g + (toRgb.g - fromRgb.g) * t);
+    const b = Math.round(fromRgb.b + (toRgb.b - fromRgb.b) * t);
+    const alpha = fromRgb.alpha + (toRgb.alpha - fromRgb.alpha) * t;
+
+    return getRgbString(r, g, b, alpha);
+}
+
+function parseRgbString(color: string): { r: number; g: number; b: number; alpha: number } {
+    const values = color.match(/[\d.]+/g)?.map(Number) || [255, 255, 255, 1];
+    return {
+        r: values[0],
+        g: values[1],
+        b: values[2],
+        alpha: values[3] ?? 1
+    };
 }

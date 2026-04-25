@@ -8,7 +8,7 @@
 
 ## What It Does
 
-AsciiVision converts images into ASCII art with multiple rendering modes, color support, and advanced image processing. Choose between artistic styles like neon glow effects or minimal ASCII representations.
+AsciiVision converts images into ASCII art with multiple rendering modes, color support, and advanced image processing. Choose between artistic styles like neon glow effects, CRT-style bloom, or minimal ASCII representations.
 
 ## Quick Start
 
@@ -104,11 +104,18 @@ These settings provide the best balance for most images:
 **Neon Palette** (MATRIX, CYAN, PURPLE, PINK, BLUE, RED, EMBER)
 - Color scheme for the glow effect
 - MATRIX (green) = default cyberpunk
+- RED and EMBER use richer luminance-based gradients for deeper shadows and brighter highlights
 
 **Glow Intensity** (0-2)
 - 0 = no glow (flat color)
 - 1.0 = subtle glow
 - 1.8-2.5 = heavy glow (PNG export recommended)
+
+**Bloom** (0-2)
+- Adds a washed CRT/Y2K flash look to neon colors
+- 0 = off
+- Higher values push colors toward paler highlights with a restrained aura
+- MATRIX + Bloom creates a softer phosphor-green terminal look
 
 <p align="center">
   <img src="images/test-14.png" alt="Test Banner" width="100%" />
@@ -118,7 +125,7 @@ These settings provide the best balance for most images:
 
 **Copy** — Clipboard text (plain ASCII)
 **TXT** — Download plain text file
-**PNG** — Download as high-quality image (includes glow effects)
+**PNG** — Download as high-quality image (includes glow and bloom effects)
 
 ## How It Works
 
@@ -128,8 +135,9 @@ These settings provide the best balance for most images:
 4. **Sharpening** — Optional convolution filter
 5. **Dithering** — Floyd-Steinberg error diffusion (optional)
 6. **Character Mapping** — Brightness mapped to ASCII characters
-7. **Color Mapping** — RGB values assigned to each character (if enabled)
-8. **Glow Rendering** — Multi-layer shadow effects (PNG export)
+7. **Color Mapping** — RGB or neon palette values assigned to each character
+8. **Bloom Wash** — Optional CRT/Y2K flash-style color wash for neon mode
+9. **Glow Rendering** — Multi-layer shadow effects (PNG export)
 
 
 ## Tips & Tricks
@@ -138,6 +146,8 @@ These settings provide the best balance for most images:
 - **Increase width** for finer detail, decrease for speed
 - **Adjust contrast first**, brightness second
 - **Neon mode + PNG export** = stunning wall-worthy art
+- **Matrix + Bloom** = softer old-terminal phosphor glow
+- **Red/Ember palettes** = gradient neon with stronger highlight depth
 - **Enable dithering** for photos with lots of gradients
 - **Disable dithering** for clean, bold graphic images
 - **Single Char mode** = minimal zen aesthetic

@@ -37,7 +37,8 @@ const DEFAULT_OPTIONS: AsciiOptions = {
     mode: 'classic',
     singleChar: '@',
     neonPalette: 'matrix',
-    glowIntensity: 0.8
+    glowIntensity: 0.8,
+    bloomIntensity: 0
 };
 
 function AppLogo() {
@@ -197,23 +198,41 @@ export default function App() {
 
                 if (options.mode === 'neon') {
                     // Match UI glow subtly - same formula as textShadow in preview
-                    const glowStrength = options.glowIntensity || 1;
+                    const glowStrength = options.glowIntensity ?? 1;
+                    const bloomStrength = options.bloomIntensity ?? 0;
+                    const drawX = x * charWidth;
+                    const drawY = y * charHeight;
 
-                    // Inner glow layer (matches UI's 2x multiplier)
-                    ctx.shadowColor = color;
-                    ctx.shadowBlur = 2 * glowStrength;
-                    ctx.shadowOffsetX = 0;
-                    ctx.shadowOffsetY = 0;
-                    ctx.fillStyle = color;
-                    ctx.fillText(char, x * charWidth, y * charHeight);
+                    if (bloomStrength > 0) {
+                        ctx.shadowColor = color;
+                        ctx.shadowBlur = 4 * bloomStrength;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 0;
+                        ctx.fillStyle = color;
+                        ctx.fillText(char, drawX, drawY);
+                    }
 
-                    // Outer glow layer (matches UI's 8x multiplier)
-                    ctx.shadowColor = color;
-                    ctx.shadowBlur = 8 * glowStrength;
-                    ctx.shadowOffsetX = 0;
-                    ctx.shadowOffsetY = 0;
+                    if (glowStrength > 0) {
+                        // Inner glow layer (matches UI's 2x multiplier)
+                        ctx.shadowColor = color;
+                        ctx.shadowBlur = 2 * glowStrength;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 0;
+                        ctx.fillStyle = color;
+                        ctx.fillText(char, drawX, drawY);
+
+                        // Outer glow layer (matches UI's 8x multiplier)
+                        ctx.shadowColor = color;
+                        ctx.shadowBlur = 8 * glowStrength;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 0;
+                        ctx.fillStyle = color;
+                        ctx.fillText(char, drawX, drawY);
+                    }
+
+                    ctx.shadowBlur = 0;
                     ctx.fillStyle = color;
-                    ctx.fillText(char, x * charWidth, y * charHeight);
+                    ctx.fillText(char, drawX, drawY);
                 } else {
                     ctx.shadowBlur = 0;
                     ctx.fillStyle = color;
@@ -502,9 +521,16 @@ export default function App() {
                                                 <ControlSlider
                                                     label="Glow Intensity"
                                                     icon={<Check className="w-3.5 h-3.5" />}
-                                                    value={options.glowIntensity || 0.8}
+                                                    value={options.glowIntensity ?? 0.8}
                                                     min={0} max={2} step={0.1}
                                                     onChange={(v) => setOptions({ ...options, glowIntensity: v })}
+                                                />
+                                                <ControlSlider
+                                                    label="Bloom"
+                                                    icon={<Zap className="w-3.5 h-3.5" />}
+                                                    value={options.bloomIntensity ?? 0}
+                                                    min={0} max={2} step={0.1}
+                                                    onChange={(v) => setOptions({ ...options, bloomIntensity: v })}
                                                 />
                                             </div>
                                         )}
@@ -620,7 +646,14 @@ export default function App() {
                                     lineHeight: '1',
                                     fontSize: `${Math.max(4, 12 - (options.width / 20))}px`,
                                     ...(options.mode === 'neon' ? {
-                                        textShadow: `0 0 ${2 * (options.glowIntensity || 1)}px currentColor, 0 0 ${8 * (options.glowIntensity || 1)}px currentColor`
+                                        textShadow: [
+                                            `0 0 ${2 * (options.glowIntensity ?? 1)}px currentColor`,
+                                            `0 0 ${8 * (options.glowIntensity ?? 1)}px currentColor`,
+                                            ...((options.bloomIntensity ?? 0) > 0 ? [
+                                                `0 0 ${3 * (options.bloomIntensity ?? 0)}px currentColor`,
+                                                `0 0 ${7 * (options.bloomIntensity ?? 0)}px currentColor`
+                                            ] : [])
+                                        ].join(', ')
                                     } : {})
                                 }}
                             >
