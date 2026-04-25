@@ -198,10 +198,18 @@ function getNeonColor(r: number, g: number, b: number, palette: NeonPalette): st
         case 'purple': return `rgba(189, 0, 255, ${alpha})`;
         case 'pink': return `rgba(255, 0, 255, ${alpha})`;
         case 'blue': return `rgba(0, 102, 255, ${alpha})`;
-        case 'red': return `rgba(255, 0, 64, ${alpha})`;
+        case 'red': return getRedNeonColor(luma, alpha);
         case 'ember': return getEmberColor(luma, alpha);
         default: return `rgb(${r},${g},${b})`;
     }
+}
+
+function getRedNeonColor(luma: number, alpha: number): string {
+    const low = { r: 22, g: 0, b: 0 };
+    const mid = { r: 255, g: 0, b: 60 };
+    const high = { r: 255, g: 179, b: 193 };
+
+    return getGradientColor(luma, alpha, low, mid, high);
 }
 
 function getEmberColor(luma: number, alpha: number): string {
@@ -209,6 +217,16 @@ function getEmberColor(luma: number, alpha: number): string {
     const mid = { r: 255, g: 106, b: 0 };
     const high = { r: 255, g: 210, b: 122 };
 
+    return getGradientColor(luma, alpha, low, mid, high);
+}
+
+function getGradientColor(
+    luma: number,
+    alpha: number,
+    low: { r: number; g: number; b: number },
+    mid: { r: number; g: number; b: number },
+    high: { r: number; g: number; b: number }
+): string {
     const from = luma < 0.65 ? low : mid;
     const to = luma < 0.65 ? mid : high;
     const rangeStart = luma < 0.65 ? 0 : 0.65;
