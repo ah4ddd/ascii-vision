@@ -101,7 +101,7 @@ These settings provide the best balance for most images:
 
 ### NEON Mode Controls
 
-**Neon Palette** (MATRIX, CYAN, PURPLE, PINK, BLUE)
+**Neon Palette** (MATRIX, CYAN, PURPLE, PINK, BLUE, RED)
 - Color scheme for the glow effect
 - MATRIX (green) = default cyberpunk
 

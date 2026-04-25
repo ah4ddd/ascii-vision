@@ -10,7 +10,7 @@
  */
 
 export type RenderingMode = 'classic' | 'single-char' | 'scanline' | 'neon';
-export type NeonPalette = 'matrix' | 'cyan' | 'purple' | 'pink' | 'blue' | 'custom';
+export type NeonPalette = 'matrix' | 'cyan' | 'purple' | 'pink' | 'blue' | 'red' | 'custom';
 
 export interface AsciiOptions {
     width: number;
@@ -198,6 +198,7 @@ function getNeonColor(r: number, g: number, b: number, palette: NeonPalette): st
         case 'purple': return `rgba(189, 0, 255, ${alpha})`;
         case 'pink': return `rgba(255, 0, 255, ${alpha})`;
         case 'blue': return `rgba(0, 102, 255, ${alpha})`;
+        case 'red': return `rgba(255, 0, 64, ${alpha})`;
         default: return `rgb(${r},${g},${b})`;
     }
 }
