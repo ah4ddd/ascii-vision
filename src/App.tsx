@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     Upload,
@@ -84,6 +84,25 @@ export default function App() {
     const [activeTab, setActiveTab] = useState<'basic' | 'advanced' | 'modes'>('basic');
 
     const [options, setOptions] = useState<AsciiOptions>(DEFAULT_OPTIONS);
+    const conversionOptions = useMemo(
+        () => options,
+        [
+            options.width,
+            options.brightness,
+            options.contrast,
+            options.gamma,
+            options.ramp,
+            options.invert,
+            options.colorMode,
+            options.aspectRatio,
+            options.dithering,
+            options.sharpen,
+            options.mode,
+            options.singleChar,
+            options.neonPalette,
+            options.bloomIntensity
+        ]
+    );
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const outputRef = useRef<HTMLElement>(null);
@@ -137,14 +156,14 @@ export default function App() {
         if (!image) return;
         setIsProcessing(true);
         try {
-            const result = await convertToAscii(image, options);
+            const result = await convertToAscii(image, conversionOptions);
             setAsciiResult(result);
         } catch (err) {
             console.error('Conversion failed', err);
         } finally {
             setIsProcessing(false);
         }
-    }, [image, options]);
+    }, [image, conversionOptions]);
 
     // Progressive updates/Debounced
     useEffect(() => {
@@ -639,39 +658,7 @@ export default function App() {
                     )}
 
                     {asciiResult && (
-                        <div className={`inline-block min-w-full ${options.mode === 'neon' ? 'neon-glow' : ''}`}>
-                            <pre
-                                className="font-mono whitespace-pre cursor-default selection:bg-indigo-500/30 transition-all duration-300"
-                                style={{
-                                    lineHeight: '1',
-                                    fontSize: `${Math.max(4, 12 - (options.width / 20))}px`,
-                                    ...(options.mode === 'neon' ? {
-                                        textShadow: [
-                                            `0 0 ${2 * (options.glowIntensity ?? 1)}px currentColor`,
-                                            `0 0 ${8 * (options.glowIntensity ?? 1)}px currentColor`,
-                                            ...((options.bloomIntensity ?? 0) > 0 ? [
-                                                `0 0 ${3 * (options.bloomIntensity ?? 0)}px currentColor`,
-                                                `0 0 ${7 * (options.bloomIntensity ?? 0)}px currentColor`
-                                            ] : [])
-                                        ].join(', ')
-                                    } : {})
-                                }}
-                            >
-                                {(options.colorMode === 'color' || options.mode === 'neon' || options.mode === 'single-char') && asciiResult.colors ? (
-                                    asciiResult.text.split('\n').map((line, y) => (
-                                        <div key={y} className="flex leading-none">
-                                            {line.split('').map((char, x) => (
-                                                <span key={`${x}-${y}`} style={{ color: asciiResult.colors![y]?.[x] }}>
-                                                    {char}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    ))
-                                ) : (
-                                    asciiResult.text
-                                )}
-                            </pre>
-                        </div>
+                        <AsciiPreview result={asciiResult} options={options} />
                     )}
                 </div>
 
@@ -686,6 +673,106 @@ export default function App() {
                     </div>
                 </div>
             </main>
+        </div>
+    );
+}
+
+function AsciiPreview({ result, options }: { result: AsciiResult; options: AsciiOptions }) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const fontSize = Math.max(4, 12 - (options.width / 20));
+    const charWidth = fontSize * 0.6;
+    const cssWidth = Math.ceil(result.width * charWidth);
+    const cssHeight = Math.ceil(result.height * fontSize);
+
+    const lines = useMemo(() => {
+        const split = result.text.split('\n');
+        if (split[split.length - 1] === '') split.pop();
+        return split;
+    }, [result.text]);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d', { alpha: true });
+        if (!ctx) return;
+
+        let frame = window.requestAnimationFrame(() => {
+            const ratio = window.devicePixelRatio || 1;
+            canvas.width = Math.max(1, Math.ceil(cssWidth * ratio));
+            canvas.height = Math.max(1, Math.ceil(cssHeight * ratio));
+            canvas.style.width = `${cssWidth}px`;
+            canvas.style.height = `${cssHeight}px`;
+
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            ctx.clearRect(0, 0, cssWidth, cssHeight);
+            ctx.font = `${fontSize}px "JetBrains Mono", ui-monospace, SFMono-Regular, monospace`;
+            ctx.textBaseline = 'top';
+            ctx.textAlign = 'left';
+
+            const useColors = (options.colorMode === 'color' || options.mode === 'neon' || options.mode === 'single-char') && result.colors;
+            const isNeon = options.mode === 'neon';
+            const glow = options.glowIntensity ?? 1;
+            const bloom = options.bloomIntensity ?? 0;
+
+            for (let y = 0; y < lines.length; y++) {
+                const line = lines[y];
+                for (let x = 0; x < line.length; x++) {
+                    const char = line[x];
+                    if (char === ' ') continue;
+
+                    const color = useColors ? result.colors![y]?.[x] || '#fff' : '#e4e4e7';
+                    const drawX = x * charWidth;
+                    const drawY = y * fontSize;
+
+                    if (isNeon) {
+                        ctx.shadowColor = color;
+                        ctx.fillStyle = color;
+
+                        if (bloom > 0) {
+                            ctx.shadowBlur = 7 * bloom;
+                            ctx.fillText(char, drawX, drawY);
+                        }
+
+                        if (glow > 0) {
+                            ctx.shadowBlur = 8 * glow;
+                            ctx.fillText(char, drawX, drawY);
+                            ctx.shadowBlur = 2 * glow;
+                            ctx.fillText(char, drawX, drawY);
+                        }
+
+                        ctx.shadowBlur = 0;
+                        ctx.fillText(char, drawX, drawY);
+                    } else {
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = color;
+                        ctx.fillText(char, drawX, drawY);
+                    }
+                }
+            }
+        });
+
+        return () => window.cancelAnimationFrame(frame);
+    }, [
+        lines,
+        result.colors,
+        cssWidth,
+        cssHeight,
+        charWidth,
+        fontSize,
+        options.colorMode,
+        options.mode,
+        options.glowIntensity,
+        options.bloomIntensity
+    ]);
+
+    return (
+        <div className="inline-block min-w-full">
+            <canvas
+                ref={canvasRef}
+                className="block cursor-default transition-opacity duration-300"
+                aria-label="Generated ASCII art preview"
+            />
         </div>
     );
 }
