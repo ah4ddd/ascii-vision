@@ -9,3 +9,5 @@ coverage/
 node_modules
 dist
 .env
+.codex
+metadata.json
