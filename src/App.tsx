@@ -16,7 +16,15 @@ import {
     Check,
     Zap
 } from 'lucide-react';
-import { convertToAscii, AsciiOptions, AsciiResult, QUALITY_RAMP, STRONG_RAMP } from './lib/ascii-engine';
+import {
+    CHARACTER_CELL_ASPECT_RATIO,
+    SOURCE_PRESERVING_ASPECT_CORRECTION,
+    convertToAscii,
+    AsciiOptions,
+    AsciiResult,
+    QUALITY_RAMP,
+    STRONG_RAMP
+} from './lib/ascii-engine';
 
 const DEFAULT_RAMP = STRONG_RAMP;
 const FULL_RAMP = QUALITY_RAMP;
@@ -31,7 +39,7 @@ const DEFAULT_OPTIONS: AsciiOptions = {
     ramp: DEFAULT_RAMP,
     invert: true,
     colorMode: 'grayscale',
-    aspectRatio: 1.8,
+    aspectRatio: SOURCE_PRESERVING_ASPECT_CORRECTION,
     dithering: true,
     sharpen: 0,
     mode: 'classic',
@@ -121,6 +129,10 @@ export default function App() {
             img.onload = () => {
                 setImage(img);
                 setPreviewUrl(event.target?.result as string);
+                setOptions((current) => ({
+                    ...current,
+                    aspectRatio: SOURCE_PRESERVING_ASPECT_CORRECTION
+                }));
             };
             img.src = event.target?.result as string;
         };
@@ -196,8 +208,8 @@ export default function App() {
         if (!ctx) return;
 
         const fontSize = 12;
-        const charWidth = 7.2; // Approximate for JetBrains Mono
         const charHeight = 12;
+        const charWidth = charHeight * CHARACTER_CELL_ASPECT_RATIO;
 
         canvas.width = asciiResult.width * charWidth;
         canvas.height = (asciiResult.text.split('\n').length - 1) * charHeight;
@@ -450,7 +462,7 @@ export default function App() {
                                             label="Aspect Ratio Correction"
                                             icon={<Monitor className="w-3.5 h-3.5" />}
                                             value={options.aspectRatio}
-                                            min={1} max={3} step={0.1}
+                                            min={0.5} max={3} step={0.01}
                                             onChange={(v) => setOptions({ ...options, aspectRatio: v })}
                                         />
                                         <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg border border-white/5">
@@ -680,7 +692,7 @@ export default function App() {
 function AsciiPreview({ result, options }: { result: AsciiResult; options: AsciiOptions }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fontSize = Math.max(4, 12 - (options.width / 20));
-    const charWidth = fontSize * 0.6;
+    const charWidth = fontSize * CHARACTER_CELL_ASPECT_RATIO;
     const cssWidth = Math.ceil(result.width * charWidth);
     const cssHeight = Math.ceil(result.height * fontSize);
 

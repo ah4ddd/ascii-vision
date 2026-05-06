@@ -28,7 +28,7 @@ These settings provide the best balance for most images:
 | Contrast | 2.00 | Sharp tonal separation |
 | Gamma | 1.20 | Natural midtone curve |
 | Sharpness | 0.00 | Clean baseline (increase if blurry) |
-| Aspect Ratio | 1.80 | Corrects character squareness |
+| Aspect Ratio | Auto | Preserves the uploaded image shape |
 | Dithering | ✓ ON | Smoother tonal gradation |
 | Invert Character Ramp | ✓ ON | Natural light/dark mapping |
 | Colored Output | ✗ OFF | Grayscale for contrast |
@@ -70,7 +70,7 @@ These settings provide the best balance for most images:
 
 **Aspect Ratio** (0.5-3)
 - Corrects stretched/squished look
-- Default: 1.8 for balanced character squareness
+- Default: auto source-preserving correction
 - Adjust based on your font
 
 **Dithering (Floyd-Steinberg)**

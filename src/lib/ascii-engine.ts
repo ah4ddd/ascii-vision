@@ -42,6 +42,8 @@ export interface AsciiResult {
  */
 export const STRONG_RAMP = "@%#*+=-:. ";
 export const QUALITY_RAMP = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
+export const CHARACTER_CELL_ASPECT_RATIO = 0.6;
+export const SOURCE_PRESERVING_ASPECT_CORRECTION = 1 / CHARACTER_CELL_ASPECT_RATIO;
 
 export async function convertToAscii(
     image: HTMLImageElement,
@@ -54,7 +56,8 @@ export async function convertToAscii(
     // 1. Calculate target grid dimensions
     const targetWidth = options.width;
     const scale = targetWidth / image.width;
-    const targetHeight = Math.floor((image.height * scale) / options.aspectRatio);
+    const aspectCorrection = Math.max(0.1, options.aspectRatio);
+    const targetHeight = Math.max(1, Math.round((image.height * scale) / aspectCorrection));
 
     canvas.width = targetWidth;
     canvas.height = targetHeight;
