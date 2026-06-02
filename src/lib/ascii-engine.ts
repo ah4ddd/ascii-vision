@@ -11,6 +11,7 @@
 
 export type RenderingMode = 'classic' | 'single-char' | 'scanline' | 'neon';
 export type NeonPalette = 'matrix' | 'cyan' | 'purple' | 'pink' | 'blue' | 'red' | 'ember' | 'custom';
+export type GlyphLanguage = 'default' | 'english' | 'japanese' | 'chinese' | 'hindi' | 'russian' | 'arabic';
 
 export interface AsciiOptions {
     width: number;
@@ -24,6 +25,7 @@ export interface AsciiOptions {
     aspectRatio: number;
     dithering: boolean;
     mode: RenderingMode;
+    glyphLanguage: GlyphLanguage;
     singleChar?: string;
     neonPalette?: NeonPalette;
     glowIntensity?: number;
@@ -37,6 +39,17 @@ export interface AsciiResult {
     height: number;
 }
 
+export interface GlyphLanguageProfile {
+    id: GlyphLanguage;
+    label: string;
+    nativeLabel: string;
+    shortLabel: string;
+    ramp: string;
+    singleChar: string;
+    fontStack: string;
+    cellAspectRatio: number;
+}
+
 /**
  * High-impact character ramps
  */
@@ -44,6 +57,109 @@ export const STRONG_RAMP = "@%#*+=-:. ";
 export const QUALITY_RAMP = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
 export const CHARACTER_CELL_ASPECT_RATIO = 0.6;
 export const SOURCE_PRESERVING_ASPECT_CORRECTION = 1 / CHARACTER_CELL_ASPECT_RATIO;
+
+const LATIN_MONO_STACK = '"JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace';
+const ENGLISH_LETTER_RAMP = 'MWQBHNRDEGKOAUPXSZVYFCTJLmwqbdpghkxaeousvznrtcilj. ';
+
+export const GLYPH_LANGUAGE_ORDER: GlyphLanguage[] = [
+    'default',
+    'english',
+    'japanese',
+    'chinese',
+    'hindi',
+    'russian',
+    'arabic'
+];
+
+export const GLYPH_LANGUAGE_PROFILES: Record<GlyphLanguage, GlyphLanguageProfile> = {
+    default: {
+        id: 'default',
+        label: 'Default',
+        nativeLabel: 'ASCII Symbols',
+        shortLabel: 'ASCII',
+        ramp: STRONG_RAMP,
+        singleChar: '@',
+        fontStack: LATIN_MONO_STACK,
+        cellAspectRatio: CHARACTER_CELL_ASPECT_RATIO
+    },
+    english: {
+        id: 'english',
+        label: 'English',
+        nativeLabel: 'Alphabet',
+        shortLabel: 'EN',
+        ramp: ENGLISH_LETTER_RAMP,
+        singleChar: 'E',
+        fontStack: LATIN_MONO_STACK,
+        cellAspectRatio: CHARACTER_CELL_ASPECT_RATIO
+    },
+    japanese: {
+        id: 'japanese',
+        label: 'Japanese',
+        nativeLabel: '日本語',
+        shortLabel: 'JP',
+        ramp: '鬱曜躍藤響熊鳥風雨光水火木日月口一、・ ',
+        singleChar: '日',
+        fontStack: '"Noto Sans JP", "Hiragino Sans", "Yu Gothic", "MS Gothic", monospace',
+        cellAspectRatio: 0.9
+    },
+    chinese: {
+        id: 'chinese',
+        label: 'Chinese',
+        nativeLabel: '中文',
+        shortLabel: 'CN',
+        ramp: '龜龍藝國黑森晶星光水山田口工一丶、· ',
+        singleChar: '龍',
+        fontStack: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimHei, monospace',
+        cellAspectRatio: 0.9
+    },
+    hindi: {
+        id: 'hindi',
+        label: 'Hindi',
+        nativeLabel: 'हिन्दी',
+        shortLabel: 'HI',
+        ramp: 'भझघधछफथमहनकगलरचसयवटइअ।॰ ',
+        singleChar: 'भ',
+        fontStack: '"Noto Sans Devanagari", Mangal, "Kohinoor Devanagari", sans-serif',
+        cellAspectRatio: 0.82
+    },
+    russian: {
+        id: 'russian',
+        label: 'Russian',
+        nativeLabel: 'Русский',
+        shortLabel: 'RU',
+        ramp: 'ШЖФЮМЫБДЯНРКЕСТЗХЛЧПУОИГЬ· ',
+        singleChar: 'Ж',
+        fontStack: LATIN_MONO_STACK,
+        cellAspectRatio: 0.62
+    },
+    arabic: {
+        id: 'arabic',
+        label: 'Arabic',
+        nativeLabel: 'العربية',
+        shortLabel: 'AR',
+        ramp: 'ظضصشغفقعمكبنهلريا،· ',
+        singleChar: 'ض',
+        fontStack: '"Noto Sans Arabic", Tahoma, Arial, sans-serif',
+        cellAspectRatio: 0.78
+    }
+};
+
+export function getGlyphLanguageProfile(language: GlyphLanguage = 'default'): GlyphLanguageProfile {
+    return GLYPH_LANGUAGE_PROFILES[language] ?? GLYPH_LANGUAGE_PROFILES.default;
+}
+
+export function getGlyphAspectCorrection(language: GlyphLanguage = 'default'): number {
+    return 1 / getGlyphLanguageProfile(language).cellAspectRatio;
+}
+
+function getRampGlyphs(ramp: string): string[] {
+    const glyphs = Array.from(ramp);
+    return glyphs.length > 0 ? glyphs : Array.from(STRONG_RAMP);
+}
+
+function getSingleGlyph(value: string | undefined, language: GlyphLanguage): string {
+    return Array.from(value || getGlyphLanguageProfile(language).singleChar)[0] || '@';
+}
 
 export async function convertToAscii(
     image: HTMLImageElement,
@@ -124,12 +240,14 @@ export async function convertToAscii(
     }
 
     // 5. Optional Dithering
+    const baseRamp = getRampGlyphs(options.ramp);
+    const steps = Math.max(1, baseRamp.length - 1);
+
     if (options.dithering) {
         for (let y = 0; y < targetHeight; y++) {
             for (let x = 0; x < targetWidth; x++) {
                 const i = y * targetWidth + x;
                 const oldVal = luminanceMap[i];
-                const steps = options.ramp.length - 1;
                 const newVal = Math.round(oldVal * steps) / steps;
                 luminanceMap[i] = newVal;
 
@@ -147,7 +265,8 @@ export async function convertToAscii(
     // 6. Mapping to ASCII
     let ascii = '';
     const finalColors: string[][] = [];
-    const ramp = options.invert ? [...options.ramp].reverse().join('') : options.ramp;
+    const ramp = options.invert ? [...baseRamp].reverse() : baseRamp;
+    const singleGlyph = getSingleGlyph(options.singleChar, options.glyphLanguage);
 
     for (let y = 0; y < targetHeight; y++) {
         const rowColors: string[] = [];
@@ -166,7 +285,7 @@ export async function convertToAscii(
             if (isScanline) {
                 char = luma > 0.3 ? '⎯' : ' ';
             } else if (options.mode === 'single-char') {
-                char = luma > 0.25 ? (options.singleChar || '@') : ' ';
+                char = luma > 0.25 ? singleGlyph : ' ';
             } else {
                 const charIdx = Math.floor(luma * (ramp.length - 1));
                 char = ramp[charIdx];

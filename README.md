@@ -4,18 +4,19 @@
 
 ---
 
-**ASCII art converter with neon effects, creative controls, and real-time rendering.**
+**ASCII and Unicode glyph art converter with neon effects, creative controls, and real-time rendering.**
 
 ## What It Does
 
-AsciiVision converts images into ASCII art with multiple rendering modes, color support, and advanced image processing. Choose between artistic styles like neon glow effects, CRT-style bloom, or minimal ASCII representations.
+AsciiVision converts images into ASCII-style text art with multiple rendering modes, color support, and advanced image processing. It has a Default keyboard-symbol ASCII mode plus English, Japanese, Chinese, Hindi, Russian, and Arabic glyph sets. Language modes use Unicode glyph art where needed.
 
 ## Quick Start
 
 1. **Upload an image** — Click, paste, or drag-drop into the input area
 2. **Adjust settings** (optional) — Tweak brightness, contrast, sharpness
-3. **Choose rendering mode** — Classic, Neon, Scanline, or Single Char
-4. **Export** — Copy to clipboard, download as TXT or PNG
+3. **Choose glyph language** — Default, English, Japanese, Chinese, Hindi, Russian, or Arabic
+4. **Choose rendering mode** — Classic, Neon, Scanline, or Single Char
+5. **Export** — Copy to clipboard, download as TXT or PNG
 
 ## Recommended Settings (Optimized)
 
@@ -27,6 +28,7 @@ These settings provide the best balance for most images:
 | Brightness | 1.20 | Slightly punchy, visible details |
 | Contrast | 2.00 | Sharp tonal separation |
 | Gamma | 1.20 | Natural midtone curve |
+| Glyph Language | Default | Classic keyboard-symbol ASCII baseline |
 | Sharpness | 0.00 | Clean baseline (increase if blurry) |
 | Aspect Ratio | Auto | Preserves the uploaded image shape |
 | Dithering | ✓ ON | Smoother tonal gradation |
@@ -55,6 +57,17 @@ These settings provide the best balance for most images:
 - Separates light and dark areas
 - Higher = more dramatic
 - Default: 2.0 for high-impact ASCII
+
+**Glyph Language**
+- Default, English, Japanese, Chinese, Hindi, Russian, Arabic
+- Default is the original symbol ramp (@, #, %, *, etc.)
+- English uses alphabet glyphs instead of the symbol ramp
+- Each language uses its own density ramp and font stack
+- Switching language also adjusts the default aspect correction for that script
+
+**Character Ramp**
+- Default-only ramp presets: Strong, Detailed, Blocks, Minimal
+- Language scripts use their language-specific ramp
 
 ### ADVANCED Tab
 
@@ -95,7 +108,7 @@ These settings provide the best balance for most images:
 **Rendering Modes**
 
 - **CLASSIC** — Full character ramp (@%#*+=-:. ) — Best for detail
-- **SINGLE CHAR** — Uses one character (@) with variable density — Minimal, bold look
+- **SINGLE CHAR** — Uses one glyph (@, 日, 龍, भ, Ж, ض, etc.) with variable density — Minimal, bold look
 - **SCANLINE** — Horizontal line pattern (⎯) — Retro CRT effect
 - **NEON** — RGB color output with glowing effect — Vibrant, cyberpunk style
 
@@ -123,7 +136,7 @@ These settings provide the best balance for most images:
 
 ## Export Options
 
-**Copy** — Clipboard text (plain ASCII)
+**Copy** — Clipboard text (ASCII symbols for Default, Unicode text for language scripts)
 **TXT** — Download plain text file
 **PNG** — Download as high-quality image (includes glow and bloom effects)
 
@@ -134,7 +147,7 @@ These settings provide the best balance for most images:
 3. **Auto-Contrast** — Min-max normalization for punch
 4. **Sharpening** — Optional convolution filter
 5. **Dithering** — Floyd-Steinberg error diffusion (optional)
-6. **Character Mapping** — Brightness mapped to ASCII characters
+6. **Glyph Mapping** — Brightness mapped to the selected language ramp
 7. **Color Mapping** — RGB or neon palette values assigned to each character
 8. **Bloom Wash** — Optional CRT/Y2K flash-style color wash for neon mode
 9. **Glow Rendering** — Multi-layer shadow effects (PNG export)
@@ -151,6 +164,8 @@ These settings provide the best balance for most images:
 - **Enable dithering** for photos with lots of gradients
 - **Disable dithering** for clean, bold graphic images
 - **Single Char mode** = minimal zen aesthetic
+- **Japanese/Chinese glyphs** work best at medium widths because the characters are wider than Latin monospace
+- **Arabic TXT export** may display differently in bidi-aware text editors; PNG export preserves the app's left-to-right grid rendering
 
 ## Built With
 

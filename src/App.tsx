@@ -14,22 +14,32 @@ import {
     ChevronLeft,
     Palette,
     Check,
-    Zap
+    Zap,
+    Languages
 } from 'lucide-react';
 import {
-    CHARACTER_CELL_ASPECT_RATIO,
-    SOURCE_PRESERVING_ASPECT_CORRECTION,
+    GLYPH_LANGUAGE_ORDER,
     convertToAscii,
     AsciiOptions,
     AsciiResult,
+    GlyphLanguage,
     QUALITY_RAMP,
-    STRONG_RAMP
+    STRONG_RAMP,
+    getGlyphAspectCorrection,
+    getGlyphLanguageProfile
 } from './lib/ascii-engine';
 
 const DEFAULT_RAMP = STRONG_RAMP;
 const FULL_RAMP = QUALITY_RAMP;
 const SHORT_RAMP = " .:-=+*#%@";
 const BLOCK_RAMP = " ░▒▓█";
+const LANGUAGE_PROFILES = GLYPH_LANGUAGE_ORDER.map((language) => getGlyphLanguageProfile(language));
+const DEFAULT_RAMP_PRESETS = [
+    { name: 'Strong', val: STRONG_RAMP },
+    { name: 'Detailed', val: FULL_RAMP },
+    { name: 'Blocks', val: BLOCK_RAMP },
+    { name: 'Minimal', val: SHORT_RAMP }
+];
 
 const DEFAULT_OPTIONS: AsciiOptions = {
     width: 300,
@@ -39,15 +49,22 @@ const DEFAULT_OPTIONS: AsciiOptions = {
     ramp: DEFAULT_RAMP,
     invert: true,
     colorMode: 'grayscale',
-    aspectRatio: SOURCE_PRESERVING_ASPECT_CORRECTION,
+    aspectRatio: getGlyphAspectCorrection('default'),
     dithering: true,
     sharpen: 0,
     mode: 'classic',
+    glyphLanguage: 'default',
     singleChar: '@',
     neonPalette: 'matrix',
     glowIntensity: 0.8,
     bloomIntensity: 0
 };
+
+function getAsciiGlyphRows(text: string): string[][] {
+    const lines = text.split('\n');
+    if (lines[lines.length - 1] === '') lines.pop();
+    return lines.map((line) => Array.from(line));
+}
 
 function AppLogo() {
     return (
@@ -106,10 +123,15 @@ export default function App() {
             options.dithering,
             options.sharpen,
             options.mode,
+            options.glyphLanguage,
             options.singleChar,
             options.neonPalette,
             options.bloomIntensity
         ]
+    );
+    const activeGlyphProfile = useMemo(
+        () => getGlyphLanguageProfile(options.glyphLanguage),
+        [options.glyphLanguage]
     );
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -131,12 +153,23 @@ export default function App() {
                 setPreviewUrl(event.target?.result as string);
                 setOptions((current) => ({
                     ...current,
-                    aspectRatio: SOURCE_PRESERVING_ASPECT_CORRECTION
+                    aspectRatio: getGlyphAspectCorrection(current.glyphLanguage)
                 }));
             };
             img.src = event.target?.result as string;
         };
         reader.readAsDataURL(file);
+    };
+
+    const handleGlyphLanguageChange = (glyphLanguage: GlyphLanguage) => {
+        const profile = getGlyphLanguageProfile(glyphLanguage);
+        setOptions((current) => ({
+            ...current,
+            glyphLanguage,
+            ramp: profile.ramp,
+            singleChar: profile.singleChar,
+            aspectRatio: getGlyphAspectCorrection(glyphLanguage)
+        }));
     };
 
     const handlePaste = useCallback((e: ClipboardEvent) => {
@@ -207,21 +240,24 @@ export default function App() {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
+        const glyphProfile = getGlyphLanguageProfile(options.glyphLanguage);
         const fontSize = 12;
         const charHeight = 12;
-        const charWidth = charHeight * CHARACTER_CELL_ASPECT_RATIO;
+        const charWidth = charHeight * glyphProfile.cellAspectRatio;
+        const glyphRows = getAsciiGlyphRows(asciiResult.text);
 
-        canvas.width = asciiResult.width * charWidth;
-        canvas.height = (asciiResult.text.split('\n').length - 1) * charHeight;
+        canvas.width = Math.ceil(asciiResult.width * charWidth);
+        canvas.height = glyphRows.length * charHeight;
 
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
+        ctx.font = `${fontSize}px ${glyphProfile.fontStack}`;
         ctx.textBaseline = 'top';
+        ctx.textAlign = 'left';
+        ctx.direction = 'ltr';
 
-        const lines = asciiResult.text.split('\n');
-        lines.forEach((line, y) => {
-            line.split('').forEach((char, x) => {
+        glyphRows.forEach((glyphs, y) => {
+            glyphs.forEach((char, x) => {
                 let color = '#fff';
                 if ((options.colorMode === 'color' || options.mode === 'neon' || options.mode === 'single-char') && asciiResult.colors) {
                     color = asciiResult.colors[y]?.[x] || '#fff';
@@ -420,24 +456,58 @@ export default function App() {
                                         />
                                         <div className="space-y-2">
                                             <label className="text-xs font-medium text-zinc-400 flex items-center gap-2">
-                                                <Layers className="w-3.5 h-3.5" /> Character Ramp
+                                                <Languages className="w-3.5 h-3.5" /> Glyph Language
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
-                                                {[
-                                                    { name: 'Strong', val: STRONG_RAMP },
-                                                    { name: 'Detailed', val: FULL_RAMP },
-                                                    { name: 'Blocks', val: BLOCK_RAMP },
-                                                    { name: 'Minimal', val: " .@" }
-                                                ].map((r) => (
+                                                {LANGUAGE_PROFILES.map((profile) => (
                                                     <button
-                                                        key={r.name}
-                                                        onClick={() => setOptions({ ...options, ramp: r.val })}
-                                                        className={`px-3 py-2 text-[10px] rounded-md border transition-all ${options.ramp === r.val ? 'bg-indigo-600/10 border-indigo-500 text-indigo-400' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:border-white/20'}`}
+                                                        key={profile.id}
+                                                        type="button"
+                                                        onClick={() => handleGlyphLanguageChange(profile.id)}
+                                                        aria-pressed={options.glyphLanguage === profile.id}
+                                                        className={`min-w-0 rounded-md border px-3 py-2 text-left transition-all ${options.glyphLanguage === profile.id ? 'bg-indigo-600/10 border-indigo-500 text-indigo-300' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:border-white/20 hover:text-zinc-300'}`}
                                                     >
-                                                        {r.name}
+                                                        <span className="flex items-center justify-between gap-2">
+                                                            <span className="truncate text-[10px] font-bold uppercase tracking-wider">{profile.label}</span>
+                                                            <span className="shrink-0 text-[9px] font-mono text-zinc-500">{profile.shortLabel}</span>
+                                                        </span>
+                                                        <span
+                                                            className="mt-1 block truncate text-sm text-white/80"
+                                                            dir="auto"
+                                                            style={{ fontFamily: profile.fontStack }}
+                                                        >
+                                                            {profile.nativeLabel}
+                                                        </span>
                                                     </button>
                                                 ))}
                                             </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-medium text-zinc-400 flex items-center gap-2">
+                                                <Layers className="w-3.5 h-3.5" /> Character Ramp
+                                            </label>
+                                            {options.glyphLanguage === 'default' ? (
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {DEFAULT_RAMP_PRESETS.map((r) => (
+                                                        <button
+                                                            key={r.name}
+                                                            type="button"
+                                                            onClick={() => setOptions({ ...options, ramp: r.val })}
+                                                            className={`px-3 py-2 text-[10px] rounded-md border transition-all ${options.ramp === r.val ? 'bg-indigo-600/10 border-indigo-500 text-indigo-400' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:border-white/20'}`}
+                                                        >
+                                                            {r.name}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className="rounded-md border border-white/5 bg-zinc-900 px-3 py-2 text-sm leading-7 text-zinc-200"
+                                                    dir="ltr"
+                                                    style={{ fontFamily: activeGlyphProfile.fontStack }}
+                                                >
+                                                    {activeGlyphProfile.ramp}
+                                                </div>
+                                            )}
                                         </div>
                                     </>
                                 )}
@@ -525,10 +595,11 @@ export default function App() {
                                                 <label className="text-[10px] font-bold text-zinc-500 uppercase">Single Character</label>
                                                 <input
                                                     type="text"
-                                                    maxLength={1}
                                                     value={options.singleChar}
-                                                    onChange={(e) => setOptions({ ...options, singleChar: e.target.value })}
-                                                    className="w-full bg-zinc-950 border border-white/10 rounded px-2 py-1 text-white text-center font-mono"
+                                                    onChange={(e) => setOptions({ ...options, singleChar: Array.from(e.target.value)[0] || '' })}
+                                                    className="w-full bg-zinc-950 border border-white/10 rounded px-2 py-1 text-white text-center"
+                                                    dir="ltr"
+                                                    style={{ fontFamily: activeGlyphProfile.fontStack }}
                                                 />
                                             </div>
                                         )}
@@ -603,7 +674,7 @@ export default function App() {
                             </button>
                         )}
                         <div className="text-sm font-medium text-zinc-400">
-                            {asciiResult ? `${asciiResult.width} × ${asciiResult.height} chars` : 'No Image Loaded'}
+                            {asciiResult ? `${asciiResult.width} × ${asciiResult.height} glyphs · ${activeGlyphProfile.label}` : `No Image Loaded · ${activeGlyphProfile.label}`}
                         </div>
                     </div>
 
@@ -681,7 +752,7 @@ export default function App() {
                         READY
                     </div>
                     <div className="px-2 py-0.5 rounded bg-zinc-900 border border-white/5">
-                        LUMINANCE: PERCEPTUAL
+                        SCRIPT: {activeGlyphProfile.shortLabel}
                     </div>
                 </div>
             </main>
@@ -691,16 +762,13 @@ export default function App() {
 
 function AsciiPreview({ result, options }: { result: AsciiResult; options: AsciiOptions }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const glyphProfile = getGlyphLanguageProfile(options.glyphLanguage);
     const fontSize = Math.max(4, 12 - (options.width / 20));
-    const charWidth = fontSize * CHARACTER_CELL_ASPECT_RATIO;
+    const charWidth = fontSize * glyphProfile.cellAspectRatio;
     const cssWidth = Math.ceil(result.width * charWidth);
     const cssHeight = Math.ceil(result.height * fontSize);
 
-    const lines = useMemo(() => {
-        const split = result.text.split('\n');
-        if (split[split.length - 1] === '') split.pop();
-        return split;
-    }, [result.text]);
+    const glyphRows = useMemo(() => getAsciiGlyphRows(result.text), [result.text]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -718,19 +786,20 @@ function AsciiPreview({ result, options }: { result: AsciiResult; options: Ascii
 
             ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
             ctx.clearRect(0, 0, cssWidth, cssHeight);
-            ctx.font = `${fontSize}px "JetBrains Mono", ui-monospace, SFMono-Regular, monospace`;
+            ctx.font = `${fontSize}px ${glyphProfile.fontStack}`;
             ctx.textBaseline = 'top';
             ctx.textAlign = 'left';
+            ctx.direction = 'ltr';
 
             const useColors = (options.colorMode === 'color' || options.mode === 'neon' || options.mode === 'single-char') && result.colors;
             const isNeon = options.mode === 'neon';
             const glow = options.glowIntensity ?? 1;
             const bloom = options.bloomIntensity ?? 0;
 
-            for (let y = 0; y < lines.length; y++) {
-                const line = lines[y];
-                for (let x = 0; x < line.length; x++) {
-                    const char = line[x];
+            for (let y = 0; y < glyphRows.length; y++) {
+                const glyphs = glyphRows[y];
+                for (let x = 0; x < glyphs.length; x++) {
+                    const char = glyphs[x];
                     if (char === ' ') continue;
 
                     const color = useColors ? result.colors![y]?.[x] || '#fff' : '#e4e4e7';
@@ -766,12 +835,13 @@ function AsciiPreview({ result, options }: { result: AsciiResult; options: Ascii
 
         return () => window.cancelAnimationFrame(frame);
     }, [
-        lines,
+        glyphRows,
         result.colors,
         cssWidth,
         cssHeight,
         charWidth,
         fontSize,
+        glyphProfile.fontStack,
         options.colorMode,
         options.mode,
         options.glowIntensity,
