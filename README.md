@@ -93,13 +93,13 @@ These settings provide the best balance for most images:
 - Better gradation with fewer characters
 - Useful for complex images
 
+### Colored MODES
+
 **Colored Output**
 - Maps original RGB to colored ASCII
 - Default: OFF
 - Off = grayscale (sharper contrast)
 - On = artistic multi-color look
-
-### Colored MODES
 
 **Color Palette**
 - Source Colors, Black & White, Terminal Green, Amber CRT, Game Boy, Cyberpunk, Sepia, Warm, Cool
