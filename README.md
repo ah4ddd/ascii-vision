@@ -76,6 +76,8 @@ These settings provide the best balance for most images:
 - Default-only ramp presets: Strong, Detailed, Blocks, Minimal
 - Language scripts use their language-specific ramp
 
+---
+
 ### ADVANCED Tab
 
 **Gamma** (0.5-2)
