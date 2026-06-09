@@ -126,6 +126,8 @@ These settings provide the best balance for most images:
 - Should stay ON for best results
 - Off only for artistic inversion
 
+---
+
 ### MODES Tab
 
 **Rendering Modes**
