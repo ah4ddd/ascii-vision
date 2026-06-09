@@ -59,12 +59,18 @@ These settings provide the best balance for most images:
 - Higher = more dramatic
 - Default: 2.0 for high-impact ASCII
 
+## Glyph MODES
+
 **Glyph Language**
 - Default, English, Japanese, Chinese, Hindi, Russian, Arabic
 - Default is the original symbol ramp (@, #, %, *, etc.)
 - English uses alphabet glyphs instead of the symbol ramp
 - Each language uses its own density ramp and font stack
 - Switching language also adjusts the default aspect correction for that script
+
+<p align="center">
+  <img src="images/test-8.png" alt="Test Banner" width="100%" />
+</p>
 
 **Character Ramp**
 - Default-only ramp presets: Strong, Detailed, Blocks, Minimal
