@@ -4,6 +4,10 @@
 
 ---
 
+<p align="center">
+  <img src="images/gif-test.gif" alt="Test Banner" width="100%" />
+</p>
+
 **ASCII and Unicode glyph art converter with neon effects, creative controls, and real-time rendering.**
 
 ## What It Does
