@@ -137,6 +137,8 @@ These settings provide the best balance for most images:
 - **SCANLINE** — Horizontal line pattern (⎯) — Retro CRT effect
 - **NEON** — RGB color output with glowing effect — Vibrant, cyberpunk style
 
+---
+
 ### NEON Mode Controls
 
 **Neon Palette** (MATRIX, CYAN, PURPLE, PINK, BLUE, RED, EMBER)
