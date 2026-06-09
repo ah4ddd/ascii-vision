@@ -99,11 +99,17 @@ These settings provide the best balance for most images:
 - Off = grayscale (sharper contrast)
 - On = artistic multi-color look
 
+### Colored MODES
+
 **Color Palette**
 - Source Colors, Black & White, Terminal Green, Amber CRT, Game Boy, Cyberpunk, Sepia, Warm, Cool
 - Source Colors keeps the original image colors
 - Palette presets snap every glyph color to the closest color in the selected palette
 - Choosing a palette preset automatically enables Colored Output
+
+<p align="center">
+  <img src="images/test-3.png" alt="Test Banner" width="100%" />
+</p>
 
 **Invert Character Ramp** ✓ DEFAULT
 - Inverts dark ↔ light mapping
