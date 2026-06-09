@@ -12,6 +12,7 @@
 export type RenderingMode = 'classic' | 'single-char' | 'scanline' | 'neon';
 export type NeonPalette = 'matrix' | 'cyan' | 'purple' | 'pink' | 'blue' | 'red' | 'ember' | 'custom';
 export type GlyphLanguage = 'default' | 'english' | 'japanese' | 'chinese' | 'hindi' | 'russian' | 'arabic';
+export type ColorPalettePreset = 'source' | 'mono' | 'terminal' | 'amber' | 'gameboy' | 'cyberpunk' | 'sepia' | 'warm' | 'cool';
 
 export interface AsciiOptions {
     width: number;
@@ -22,6 +23,7 @@ export interface AsciiOptions {
     ramp: string;
     invert: boolean;
     colorMode: 'grayscale' | 'color';
+    colorPalette: ColorPalettePreset;
     aspectRatio: number;
     dithering: boolean;
     mode: RenderingMode;
@@ -50,6 +52,13 @@ export interface GlyphLanguageProfile {
     cellAspectRatio: number;
 }
 
+export interface ColorPaletteProfile {
+    id: ColorPalettePreset;
+    label: string;
+    shortLabel: string;
+    colors: string[];
+}
+
 /**
  * High-impact character ramps
  */
@@ -60,6 +69,8 @@ export const SOURCE_PRESERVING_ASPECT_CORRECTION = 1 / CHARACTER_CELL_ASPECT_RAT
 
 const LATIN_MONO_STACK = '"JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace';
 const ENGLISH_LETTER_RAMP = 'MWQBHNRDEGKOAUPXSZVYFCTJLmwqbdpghkxaeousvznrtcilj. ';
+
+type RgbColor = { r: number; g: number; b: number };
 
 export const GLYPH_LANGUAGE_ORDER: GlyphLanguage[] = [
     'default',
@@ -152,6 +163,79 @@ export function getGlyphAspectCorrection(language: GlyphLanguage = 'default'): n
     return 1 / getGlyphLanguageProfile(language).cellAspectRatio;
 }
 
+export const COLOR_PALETTE_ORDER: ColorPalettePreset[] = [
+    'source',
+    'mono',
+    'terminal',
+    'amber',
+    'gameboy',
+    'cyberpunk',
+    'sepia',
+    'warm',
+    'cool'
+];
+
+export const COLOR_PALETTE_PRESETS: Record<ColorPalettePreset, ColorPaletteProfile> = {
+    source: {
+        id: 'source',
+        label: 'Source Colors',
+        shortLabel: 'SRC',
+        colors: ['#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#6366f1']
+    },
+    mono: {
+        id: 'mono',
+        label: 'Black & White',
+        shortLabel: 'B&W',
+        colors: ['#050505', '#3f3f46', '#a1a1aa', '#f4f4f5']
+    },
+    terminal: {
+        id: 'terminal',
+        label: 'Terminal Green',
+        shortLabel: 'TERM',
+        colors: ['#00140a', '#006b35', '#00c853', '#c8ffd8']
+    },
+    amber: {
+        id: 'amber',
+        label: 'Amber CRT',
+        shortLabel: 'CRT',
+        colors: ['#160900', '#7a3200', '#ff9f1c', '#ffe1a8']
+    },
+    gameboy: {
+        id: 'gameboy',
+        label: 'Game Boy',
+        shortLabel: 'GB',
+        colors: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f']
+    },
+    cyberpunk: {
+        id: 'cyberpunk',
+        label: 'Cyberpunk',
+        shortLabel: 'CYBR',
+        colors: ['#060014', '#2b0f54', '#00e5ff', '#ff2bd6', '#fff15a']
+    },
+    sepia: {
+        id: 'sepia',
+        label: 'Sepia',
+        shortLabel: 'SEPIA',
+        colors: ['#1b1008', '#5f3920', '#b7794b', '#f1d2a2']
+    },
+    warm: {
+        id: 'warm',
+        label: 'Warm',
+        shortLabel: 'WARM',
+        colors: ['#1c0505', '#7f1d1d', '#ea580c', '#facc15', '#fff7ed']
+    },
+    cool: {
+        id: 'cool',
+        label: 'Cool',
+        shortLabel: 'COOL',
+        colors: ['#020617', '#1e3a8a', '#0891b2', '#67e8f9', '#f8fafc']
+    }
+};
+
+export function getColorPaletteProfile(palette: ColorPalettePreset = 'source'): ColorPaletteProfile {
+    return COLOR_PALETTE_PRESETS[palette] ?? COLOR_PALETTE_PRESETS.source;
+}
+
 function getRampGlyphs(ramp: string): string[] {
     const glyphs = Array.from(ramp);
     return glyphs.length > 0 ? glyphs : Array.from(STRONG_RAMP);
@@ -159,6 +243,50 @@ function getRampGlyphs(ramp: string): string[] {
 
 function getSingleGlyph(value: string | undefined, language: GlyphLanguage): string {
     return Array.from(value || getGlyphLanguageProfile(language).singleChar)[0] || '@';
+}
+
+function getPresetRgbColors(palette: ColorPalettePreset): RgbColor[] | undefined {
+    if (palette === 'source') return undefined;
+    return getColorPaletteProfile(palette).colors.map(hexToRgb);
+}
+
+function hexToRgb(hex: string): RgbColor {
+    const normalized = hex.replace('#', '');
+    const value = parseInt(normalized.length === 3
+        ? normalized.split('').map((char) => char + char).join('')
+        : normalized, 16);
+
+    return {
+        r: (value >> 16) & 255,
+        g: (value >> 8) & 255,
+        b: value & 255
+    };
+}
+
+function getMappedColorString(r: number, g: number, b: number, paletteColors?: RgbColor[]): string {
+    if (!paletteColors?.length) return `rgb(${r},${g},${b})`;
+
+    const color = findNearestColor(r, g, b, paletteColors);
+    return `rgb(${color.r},${color.g},${color.b})`;
+}
+
+function findNearestColor(r: number, g: number, b: number, paletteColors: RgbColor[]): RgbColor {
+    let nearest = paletteColors[0];
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    for (const color of paletteColors) {
+        const dr = r - color.r;
+        const dg = g - color.g;
+        const db = b - color.b;
+        const distance = dr * dr * 0.2126 + dg * dg * 0.7152 + db * db * 0.0722;
+
+        if (distance < nearestDistance) {
+            nearest = color;
+            nearestDistance = distance;
+        }
+    }
+
+    return nearest;
 }
 
 export async function convertToAscii(
@@ -267,6 +395,7 @@ export async function convertToAscii(
     const finalColors: string[][] = [];
     const ramp = options.invert ? [...baseRamp].reverse() : baseRamp;
     const singleGlyph = getSingleGlyph(options.singleChar, options.glyphLanguage);
+    const paletteColors = options.mode === 'neon' ? undefined : getPresetRgbColors(options.colorPalette);
 
     for (let y = 0; y < targetHeight; y++) {
         const rowColors: string[] = [];
@@ -293,7 +422,7 @@ export async function convertToAscii(
 
             ascii += char;
 
-            let colorStr = `rgb(${r},${g},${b})`;
+            let colorStr = getMappedColorString(r, g, b, paletteColors);
             if (options.mode === 'neon' && options.neonPalette) {
                 colorStr = getNeonColor(r, g, b, options.neonPalette, options.bloomIntensity ?? 0);
             }

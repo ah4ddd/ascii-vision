@@ -34,6 +34,7 @@ These settings provide the best balance for most images:
 | Dithering | ✓ ON | Smoother tonal gradation |
 | Invert Character Ramp | ✓ ON | Natural light/dark mapping |
 | Colored Output | ✗ OFF | Grayscale for contrast |
+| Color Palette | Source Colors | Uses original image colors when color is enabled |
 
 <p align="center">
   <img src="images/test-12.png" alt="Test Banner" width="100%" />
@@ -98,6 +99,12 @@ These settings provide the best balance for most images:
 - Off = grayscale (sharper contrast)
 - On = artistic multi-color look
 
+**Color Palette**
+- Source Colors, Black & White, Terminal Green, Amber CRT, Game Boy, Cyberpunk, Sepia, Warm, Cool
+- Source Colors keeps the original image colors
+- Palette presets snap every glyph color to the closest color in the selected palette
+- Choosing a palette preset automatically enables Colored Output
+
 **Invert Character Ramp** ✓ DEFAULT
 - Inverts dark ↔ light mapping
 - Should stay ON for best results
@@ -148,7 +155,7 @@ These settings provide the best balance for most images:
 4. **Sharpening** — Optional convolution filter
 5. **Dithering** — Floyd-Steinberg error diffusion (optional)
 6. **Glyph Mapping** — Brightness mapped to the selected language ramp
-7. **Color Mapping** — RGB or neon palette values assigned to each character
+7. **Color Mapping** — RGB, palette preset, or neon values assigned to each character
 8. **Bloom Wash** — Optional CRT/Y2K flash-style color wash for neon mode
 9. **Glow Rendering** — Multi-layer shadow effects (PNG export)
 
@@ -161,6 +168,7 @@ These settings provide the best balance for most images:
 - **Neon mode + PNG export** = stunning wall-worthy art
 - **Matrix + Bloom** = softer old-terminal phosphor glow
 - **Red/Ember palettes** = gradient neon with stronger highlight depth
+- **Color Palette presets** = cleaner, poster-like output with fewer colors
 - **Enable dithering** for photos with lots of gradients
 - **Disable dithering** for clean, bold graphic images
 - **Single Char mode** = minimal zen aesthetic

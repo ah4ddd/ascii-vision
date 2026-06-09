@@ -18,13 +18,16 @@ import {
     Languages
 } from 'lucide-react';
 import {
+    COLOR_PALETTE_ORDER,
     GLYPH_LANGUAGE_ORDER,
     convertToAscii,
     AsciiOptions,
     AsciiResult,
+    ColorPalettePreset,
     GlyphLanguage,
     QUALITY_RAMP,
     STRONG_RAMP,
+    getColorPaletteProfile,
     getGlyphAspectCorrection,
     getGlyphLanguageProfile
 } from './lib/ascii-engine';
@@ -34,6 +37,7 @@ const FULL_RAMP = QUALITY_RAMP;
 const SHORT_RAMP = " .:-=+*#%@";
 const BLOCK_RAMP = " ░▒▓█";
 const LANGUAGE_PROFILES = GLYPH_LANGUAGE_ORDER.map((language) => getGlyphLanguageProfile(language));
+const COLOR_PALETTE_PROFILES = COLOR_PALETTE_ORDER.map((palette) => getColorPaletteProfile(palette));
 const DEFAULT_RAMP_PRESETS = [
     { name: 'Strong', val: STRONG_RAMP },
     { name: 'Detailed', val: FULL_RAMP },
@@ -49,6 +53,7 @@ const DEFAULT_OPTIONS: AsciiOptions = {
     ramp: DEFAULT_RAMP,
     invert: true,
     colorMode: 'grayscale',
+    colorPalette: 'source',
     aspectRatio: getGlyphAspectCorrection('default'),
     dithering: true,
     sharpen: 0,
@@ -119,6 +124,7 @@ export default function App() {
             options.ramp,
             options.invert,
             options.colorMode,
+            options.colorPalette,
             options.aspectRatio,
             options.dithering,
             options.sharpen,
@@ -169,6 +175,14 @@ export default function App() {
             ramp: profile.ramp,
             singleChar: profile.singleChar,
             aspectRatio: getGlyphAspectCorrection(glyphLanguage)
+        }));
+    };
+
+    const handleColorPaletteChange = (colorPalette: ColorPalettePreset) => {
+        setOptions((current) => ({
+            ...current,
+            colorPalette,
+            colorMode: colorPalette === 'source' ? current.colorMode : 'color'
         }));
     };
 
@@ -559,6 +573,39 @@ export default function App() {
                                                 className="w-4 h-4 rounded bg-zinc-800 border-zinc-700 text-indigo-600 focus:ring-indigo-500/20"
                                             />
                                         </div>
+                                        {options.mode !== 'neon' && (
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-medium text-zinc-400 flex items-center gap-2">
+                                                    <Palette className="w-3.5 h-3.5" /> Color Palette
+                                                </label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {COLOR_PALETTE_PROFILES.map((profile) => (
+                                                        <button
+                                                            key={profile.id}
+                                                            type="button"
+                                                            onClick={() => handleColorPaletteChange(profile.id)}
+                                                            aria-pressed={options.colorPalette === profile.id}
+                                                            title={profile.label}
+                                                            className={`min-w-0 rounded-md border px-2.5 py-2 text-left transition-all ${options.colorPalette === profile.id ? 'bg-indigo-600/10 border-indigo-500 text-indigo-300' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:border-white/20 hover:text-zinc-300'}`}
+                                                        >
+                                                            <span className="flex items-center justify-between gap-2">
+                                                                <span className="truncate text-[10px] font-bold uppercase tracking-wider">{profile.label}</span>
+                                                                <span className="shrink-0 text-[9px] font-mono text-zinc-500">{profile.shortLabel}</span>
+                                                            </span>
+                                                            <span className="mt-2 flex h-3 overflow-hidden rounded-sm border border-white/10">
+                                                                {profile.colors.map((color) => (
+                                                                    <span
+                                                                        key={color}
+                                                                        className="h-full flex-1"
+                                                                        style={{ backgroundColor: color }}
+                                                                    />
+                                                                ))}
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg border border-white/5">
                                             <div className="flex items-center gap-2 text-xs font-medium">
                                                 Invert Character Ramp
