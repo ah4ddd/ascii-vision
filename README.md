@@ -101,6 +101,8 @@ These settings provide the best balance for most images:
 - Better gradation with fewer characters
 - Useful for complex images
 
+---
+
 ### Colored MODES
 
 **Colored Output**
