@@ -122,7 +122,7 @@ These settings provide the best balance for most images:
 - Choosing a palette preset automatically enables Colored Output
 
 <p align="center">
-  <img src="images/test-5.png" alt="Test Banner" width="100%" />
+  <img src="images/test-4.png" alt="Test Banner" width="100%" />
 </p>
 
 **Invert Character Ramp** ✓ DEFAULT
