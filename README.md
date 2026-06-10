@@ -1,9 +1,6 @@
 <p align="center">
   <img src="images/test-2.png" alt="Test Banner" width="100%" />
 </p>
-
----
-
 <p align="center">
   <img src="images/gif-test.gif" alt="Test Banner" width="100%" />
 </p>
