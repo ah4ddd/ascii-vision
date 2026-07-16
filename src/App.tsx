@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { registerSW } from 'virtual:pwa-register';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     Upload,
@@ -71,6 +72,12 @@ function getAsciiGlyphRows(text: string): string[][] {
     return lines.map((line) => Array.from(line));
 }
 
+interface BeforeInstallPromptEvent extends Event {
+    readonly platforms: string[];
+    readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+    prompt(): Promise<void>;
+}
+
 function AppLogo() {
     return (
         <svg
@@ -112,6 +119,11 @@ export default function App() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [showControls, setShowControls] = useState(true);
     const [activeTab, setActiveTab] = useState<'basic' | 'advanced' | 'modes'>('basic');
+    const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+    const [showInstallButton, setShowInstallButton] = useState(false);
+    const [isOfflineReady, setIsOfflineReady] = useState(false);
+    const [needRefresh, setNeedRefresh] = useState(false);
+    const updateSWRef = useRef<(() => Promise<void>) | null>(null);
 
     const [options, setOptions] = useState<AsciiOptions>(DEFAULT_OPTIONS);
     const conversionOptions = useMemo(
@@ -211,6 +223,36 @@ export default function App() {
         return () => window.removeEventListener('paste', handlePaste);
     }, [handlePaste]);
 
+    useEffect(() => {
+        const onBeforeInstallPrompt = (event: Event) => {
+            const promptEvent = event as BeforeInstallPromptEvent;
+            event.preventDefault();
+            setDeferredPrompt(promptEvent);
+            setShowInstallButton(true);
+        };
+
+        const onAppInstalled = () => {
+            setDeferredPrompt(null);
+            setShowInstallButton(false);
+        };
+
+        window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+        window.addEventListener('appinstalled', onAppInstalled);
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+            window.removeEventListener('appinstalled', onAppInstalled);
+        };
+    }, []);
+
+    useEffect(() => {
+        updateSWRef.current = registerSW({
+            immediate: true,
+            onOfflineReady: () => setIsOfflineReady(true),
+            onNeedRefresh: () => setNeedRefresh(true)
+        });
+    }, []);
+
     const runConversion = useCallback(async () => {
         if (!image) return;
         setIsProcessing(true);
@@ -229,6 +271,25 @@ export default function App() {
         const timeout = setTimeout(runConversion, 150);
         return () => clearTimeout(timeout);
     }, [runConversion]);
+
+    const handleInstallClick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        try {
+            const choice = await deferredPrompt.userChoice;
+            if (choice.outcome === 'accepted') {
+                console.log('PWA install accepted');
+            }
+        } finally {
+            setDeferredPrompt(null);
+            setShowInstallButton(false);
+        }
+    };
+
+    const handleUpdateClick = async () => {
+        await updateSWRef.current?.();
+        setNeedRefresh(false);
+    };
 
     const copyToClipboard = () => {
         if (asciiResult) {
@@ -747,6 +808,22 @@ export default function App() {
                         >
                             <ImageIcon className="w-3.5 h-3.5" /> <span>PNG</span>
                         </button>
+                        {showInstallButton && (
+                            <button
+                                onClick={handleInstallClick}
+                                className="flex items-center justify-center gap-2 rounded-md border border-white/5 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition-all hover:bg-emerald-500 sm:py-1.5"
+                            >
+                                <span>Install</span>
+                            </button>
+                        )}
+                        {needRefresh && (
+                            <button
+                                onClick={handleUpdateClick}
+                                className="flex items-center justify-center gap-2 rounded-md border border-white/5 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition-all hover:bg-sky-500 sm:py-1.5"
+                            >
+                                <span>Update</span>
+                            </button>
+                        )}
                         <a
                             href="https://github.com/ah4ddd/ascii-vision"
                             target="_blank"
@@ -795,9 +872,14 @@ export default function App() {
                 {/* Floating Tooltips or Status */}
                 <div className="absolute bottom-6 right-6 flex items-center gap-4 text-[10px] text-zinc-500 font-mono">
                     <div className="flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        READY
+                        <div className={`w-1.5 h-1.5 rounded-full ${isOfflineReady ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-600'}`} />
+                        {isOfflineReady ? 'OFFLINE READY' : 'READY'}
                     </div>
+                    {needRefresh && (
+                        <div className="px-2 py-0.5 rounded bg-sky-950 border border-sky-600 text-sky-300">
+                            New update available
+                        </div>
+                    )}
                     <div className="px-2 py-0.5 rounded bg-zinc-900 border border-white/5">
                         SCRIPT: {activeGlyphProfile.shortLabel}
                     </div>
