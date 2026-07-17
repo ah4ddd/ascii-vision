@@ -12,11 +12,13 @@ export default defineConfig(({ mode }) => {
             tailwindcss(),
             VitePWA({
                 registerType: 'autoUpdate',
-                includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'maskable_icon.png'],
+                includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'maskable_icon.png', 'icons/icon-192x192.png', 'icons/icon-512x512.png'],
                 manifest: {
                     name: 'AsciiVision',
                     short_name: 'AsciiVision',
                     description: 'Advanced ASCII art converter with neon effects and offline support.',
+                    start_url: '/',
+                    scope: '/',
                     theme_color: '#0a0a0a',
                     background_color: '#050505',
                     display: 'standalone',
@@ -27,11 +29,13 @@ export default defineConfig(({ mode }) => {
                             src: '/icons/icon-192x192.png',
                             sizes: '192x192',
                             type: 'image/png',
+                            purpose: 'any'
                         },
                         {
                             src: '/icons/icon-512x512.png',
                             sizes: '512x512',
                             type: 'image/png',
+                            purpose: 'any'
                         },
                         {
                             src: '/maskable_icon.png',
@@ -42,7 +46,8 @@ export default defineConfig(({ mode }) => {
                         {
                             src: '/apple-touch-icon.png',
                             sizes: '180x180',
-                            type: 'image/png'
+                            type: 'image/png',
+                            purpose: 'any'
                         }
                     ]
                 },
